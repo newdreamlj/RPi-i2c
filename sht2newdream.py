@@ -73,14 +73,18 @@ if __name__ == "__main__":
         try:
             # client.publish("td/room615/temp/1", "%.2f" % t)
             # client.publish("td/room615/humid/1", "%.2f" % h)
-            client.publish("td/room615/sensor/1",'{"dev":"RPi","id":"001","mac":"%s","data":{"temp":%.2f,"humid":%.2f}}' % (mac,t,h)) 
+            client.publish("td/room615/sensor/1",'{"dev":"RPi","id":"001","mac":"%s","data":{"temp":%.2f,"humid":%.2f}}' % (mac,t,h),retain=True) 
             if countdown_1min == 0:
                 countdown_1min=60
                 wifi_scan_result = [[cell.signal, cell.ssid, cell.address] for cell in Cell.all(interface)]
                 wifi_scan_result.sort(comp3)
                 wifi_scan_result = wifi_scan_result[:20]
                 print wifi_scan_result
-                client.publish("td/room615/sensor/1",'{"dev":"RPi","id":"001","mac":"%s","wifi_scan":"%s"}' % (mac,wifi_scan_result))
+                cell = wifi_scan_result[0]
+                b = "%s,%d,%s" %  (cell[2], cell[0], cell[1])
+                for cell in wifi_scan_result[1:]:
+                    b = b + "|%s,%d,%s" %  (cell[2], cell[0], cell[1])
+                client.publish("td/room615/sensor/1/wifi",'{"dev":"RPi","id":"001","mac":"%s","wifi_scan":"%s"}' % (mac,b), retain=True)
         except Exception, e:
             print e
         time.sleep(0.95)

@@ -55,7 +55,7 @@ def adxl_init():
     bus.write_byte_data(ADXL_ADDR,OFSZ,0x00)
 
 def adxl_read():
-    for i in range(32):
+    for i in range(320):
         # bus.write_byte(ADXL_ADDR, 0x32)
         data = bus.read_i2c_block_data(ADXL_ADDR, 0x32, 6)
         dx = ctypes.c_int16((data[1]<<8) + data[0]).value * 4
