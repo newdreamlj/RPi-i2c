@@ -12,9 +12,10 @@ import uuid
 import os
 import sys
 import sht30.i2c as SHT30
+import adxl345.i2c as adxl
 import logging
 
-MQTT_PUBLISH_PERIOD = 1.0
+MQTT_PUBLISH_PERIOD = 0.1
 global timer_publish_triggered
 timer_publish_triggered = 0
 
@@ -48,6 +49,7 @@ if __name__ == "__main__":
 
     sht30 = SHT30.Sht30()
     sht30.enable_periodic_measurement()
+    adxl = adxl.Adxl345()
 
     mac=uuid.UUID(int = uuid.getnode()).hex[-12:]
     logging.info("MAC:"+ mac)
@@ -67,15 +69,33 @@ if __name__ == "__main__":
     # countdown_1min=2
 
     timer_publish_trigger()
+    COUNT_PER_1S = 10
+    count_for_1s = 0
+    adxl.flash_fifo()
 
     while 1:
         if timer_publish_triggered == 1:
             timer_publish_triggered = 0
+            count_for_1s = count_for_1s + 1
+            # every 1.0 s
+            if count_for_1s == COUNT_PER_1S:
+                count_for_1s = 0
+                # upload sht             
+                try:
+                    temp,humid,timestamp = sht30.read_periodic()
+		    if timestamp !=0:
+                        payload = '{"mac":"%s","ts":%d,"c_temp":%.2f,"c_humid":%.2f}' % (mac,timestamp,temp,humid);
+                        client.publish("tddt/rpi-001/s_temp_humid",payload)
+                except Exception, e:
+		    print e
+                    logging.error(e)
+
+            # every 0.1s
             try:
-                temp,humid,timestamp = sht30.read_periodic()
-		payload = '{"mac":"%s","ts":%d,"c_temp":%.2f,"c_humid":%.2f}' % (mac,timestamp,temp,humid);
-		# print payload
-                client.publish("tddt/rpi-001/s_temp_humid",payload)
+                ax,ay,az,timestamp = adxl.read()
+		if timestamp != 0:
+                    payload = '{"mac":"%s","ts":%d,"c_ax":%d,"c_ay":%d,"c_az":%d}' % (mac,timestamp,ax,ay,az);
+                    client.publish("tddt/rpi-001/s_acceleration",payload)
             except Exception, e:
 		print e
                 logging.error(e)

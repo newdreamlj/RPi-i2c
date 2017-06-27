@@ -66,16 +66,22 @@ class Sht30(object):
     def read_single_shot(self):
         self.set_config(CMD_MEAS_PERI_2_H)
         timestamp = int(time.time()*1e9)
-        data = self.i2c_bus.read_i2c_block_data(SHT_ADDR, 0,6)
+        try:
+	    data = self.i2c_bus.read_i2c_block_data(SHT_ADDR, 0,6)
+        except Exception, e:
+            return 0,0,0
         temp = ((( data[0] * 256.0 + data[1]) * 175 ) / 65535.0) - 45
         humid = ((( data[3] * 256.0 + data[4]) * 100 ) / 65535.0)
         # print "T = %6.2f   RH = %6.2f %%" % (temp,humid)
-        return temp,humid
+        return temp,humid,timestamp
 
     def read_periodic(self):
         self.set_config(CMD_FETCH_DATA)
         timestamp = int(time.time()*1e9)
-        data = self.i2c_bus.read_i2c_block_data(SHT_ADDR, 0,6)
+        try:
+            data = self.i2c_bus.read_i2c_block_data(SHT_ADDR, 0,6)
+        except Exception, e:
+            return 0,0,0
         temp = ((( data[0] * 256.0 + data[1]) * 175 ) / 65535.0) - 45
         humid = ((( data[3] * 256.0 + data[4]) * 100 ) / 65535.0)
         # print "T = %6.2f   RH = %6.2f %%" % (temp,humid)
