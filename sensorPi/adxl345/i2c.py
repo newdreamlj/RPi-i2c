@@ -90,9 +90,9 @@ class Adxl345(object):
                 print "not enough points %d" % count
                 break
             count = count + 1
-            ax = ax + ctypes.c_int16((data[1]<<8) + data[0]).value * 4
-            ay = ay + ctypes.c_int16((data[3]<<8) + data[2]).value * 4
-            az = az + ctypes.c_int16((data[5]<<8) + data[4]).value * 4
+            ax = ax + ctypes.c_int16((data[1]<<8) + data[0]).value * 9.8 / 250
+            ay = ay + ctypes.c_int16((data[3]<<8) + data[2]).value * 9.8 / 250
+            az = az + ctypes.c_int16((data[5]<<8) + data[4]).value * 9.8 / 250
         if count == 0:
             return 0,0,0,0
         ax = ax / count
