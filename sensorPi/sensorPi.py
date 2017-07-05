@@ -14,6 +14,7 @@ import sys
 import sht30.i2c as SHT30
 import adxl345.i2c as adxl
 import logging
+import argparse
 
 MQTT_PUBLISH_PERIOD = 0.1
 global timer_publish_triggered
@@ -76,20 +77,52 @@ def sensor_loop():
                     logging.error(e)
 
             # every X0.1sX 1.0 s
-            try:
-                ax,ay,az,timestamp = adxl.read()
-                if timestamp != 0:
-                    payload = '{"mac":"%s","ts":%d,"c_ax":%.3f,"c_ay":%.3f,"c_az":%.3f}' % (mac,timestamp,ax,ay,az);
-                    client.publish("tddt/rpi/rpi-001/s_acceleration",payload)
-                    print payload
-            except Exception, e:
-                print e
-                logging.error(e)
+            # try:
+            #     ax,ay,az,timestamp = adxl.read()
+            #     if timestamp != 0:
+            #         payload = '{"mac":"%s","ts":%d,"c_ax":%.3f,"c_ay":%.3f,"c_az":%.3f}' % (mac,timestamp,ax,ay,az);
+            #         client.publish("tddt/rpi/rpi-001/s_acceleration",payload)
+            #         print payload
+            # except Exception, e:
+            #     print e
+            #     logging.error(e)
         else:
             time.sleep(0.001)
 
 
 if __name__ == "__main__":
+
+    # fetch params
+    # if len(sys.argv)>1:
+    #     hostname = sys.argv[1]
+    # else:
+    #    hostname = "newdream.ren"
+
+    # if len(sys.argv)>2:
+    #     username = sys.argv[2]
+    # else:
+    #     username = None
+
+    # if len(sys.argv)>3:
+    #     password = sys.argv[3]
+    # else:
+    #     password = None
+
+    # print sys.argv
+    # print hostname
+    # print username
+    # print password
+
+    # arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--host', type=str, default="localhost")
+    parser.add_argument('--port', type=int, default=1883)
+    parser.add_argument('--username', type=str, default=None)
+    parser.add_argument('--password', type=str, default=None)
+    args = parser.parse_args()
+
+    print args
+  
     logging.basicConfig(filename='mqtt-bridge.log',level=logging.DEBUG,format='%(asctime)s  %(message)s')
 
     sht30 = SHT30.Sht30()
@@ -102,6 +135,8 @@ if __name__ == "__main__":
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
+    if args.username != None:
+        client.username_pw_set(args.username, args.password)
     client.loop_start()
 
     # if len(sys.argv) > 1:
@@ -115,7 +150,7 @@ if __name__ == "__main__":
         try:
             print "try connecting..."
             logging.info("Try connecting to server...")
-            client.connect("newdream.ren", 1883, 10)
+            client.connect(args.host, args.port, 10)
             # client.loop_start()
             time.sleep(2)
             sensor_loop()

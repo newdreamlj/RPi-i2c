@@ -85,7 +85,7 @@ class Adxl345(object):
             # self.i2c_bus.write_byte(ADXL_ADDR, 0x32)
             try:
                 data = self.i2c_bus.read_i2c_block_data(ADXL_ADDR, 0x32, 6)
-                time.sleep(0.000005)
+                time.sleep(0.00001)
             except Exception, e:
                 print "not enough points %d" % count
                 break
